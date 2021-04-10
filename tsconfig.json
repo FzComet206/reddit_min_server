@@ -1,0 +1,19 @@
+{
+   "compilerOptions": {
+      "lib": [
+         // "es5",
+         // "es6",
+         "ESNext",
+         "ESNext.AsyncIterable"
+      ],
+      "target": "es5",
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "outDir": "./dist",
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true,
+      "sourceMap": true,
+      "esModuleInterop": true, // this for default import
+      "strictPropertyInitialization": false
+   }
+}
