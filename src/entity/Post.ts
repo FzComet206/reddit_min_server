@@ -10,7 +10,7 @@ export class Post extends BaseEntity{
     id: number;
 
     @Field(()=> String)
-    @Column({type: "varchar", default: "Michael"})
+    @Column({type: "varchar", default: "Admin"})
     username: string;
 
     @Field(()=> String)
@@ -21,8 +21,8 @@ export class Post extends BaseEntity{
     @CreateDateColumn()
     createdAt: Date;
 
-    // @Field(()=> String)
-    // @UpdateDateColumn()
-    // updatedAt: Date;
+    @Field(()=> String)
+    @UpdateDateColumn()
+    updatedAt: Date;
 
 }

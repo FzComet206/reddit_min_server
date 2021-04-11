@@ -4,5 +4,7 @@ node_modules/
 dist/
 tmp/
 temp/
+src/migration/
+
 package-lock.json
 ormconfig.json

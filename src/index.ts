@@ -7,8 +7,8 @@ import { ApolloServer } from 'apollo-server-express';
 
 import { buildSchema } from 'type-graphql';
 
-import { HelloResolver } from "./resolvers/hi";
 import { PostResolver } from "./resolvers/post";
+import { UserResolver } from "./resolvers/user";
 
 
 const connectDB = async () => {
@@ -24,7 +24,7 @@ const connectDB = async () => {
 const createSchema = async ()=>{
     const schema = {
         schema: await buildSchema({
-            resolvers: [HelloResolver, PostResolver],
+            resolvers: [UserResolver, PostResolver],
             validate: true
             })
     }
