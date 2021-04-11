@@ -1,3 +1,4 @@
+import { MyContext } from "./types";
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 
@@ -9,7 +10,35 @@ import { buildSchema } from 'type-graphql';
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 
+import * as redis from 'redis';
+import session from 'express-session';
+import connectRedis from 'connect-redis';
 
+const redisConnect = async (ctx) => {
+
+    const RedisStore = await connectRedis(session);
+    const redisClient = await redis.createClient();
+
+    await ctx.use(
+        session({
+            name: 'my-cookie',
+            store: new RedisStore({ 
+                client: redisClient,
+                disableTouch: true
+            }),
+            cookie: {
+                maxAge: 1000 * 60 * 60 * 24,
+                httpOnly: true,                // cannot access cookie in frontend
+                secure: false                  // turn to true in prod
+            },
+            saveUninitialized: false,
+            secret: '174115261',
+            resave: false
+        })
+    )
+    console.log("redis middleware connected to express")
+}
+ 
 const connectDB = async () => {
     try {
         const connect = await createConnection();
@@ -20,12 +49,13 @@ const connectDB = async () => {
     }
 }
 
-const createSchema = async ()=>{
+const createSchema = async () => {
     const schema = {
         schema: await buildSchema({
             resolvers: [UserResolver, PostResolver],
             validate: true
-            })
+            }),
+        context: ({req, res}): MyContext => ({req, res})  // we can access sessions using req context
     }
     console.log("schema created")
     return schema;
@@ -39,6 +69,7 @@ const main = async () => {
     })
 
     await connectDB();
+    await redisConnect(app);
     
     const schema = await createSchema()
     const apolloserver = await new ApolloServer(schema)
@@ -48,6 +79,10 @@ const main = async () => {
 }
 
 
-main().catch((err)=>{
+main()
+.then(()=>{
+    console.log("api endpoint initialized")
+})
+.catch((err)=>{
     console.log(err)
 })
