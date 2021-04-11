@@ -1,6 +1,5 @@
 import "reflect-metadata";
 import { createConnection } from "typeorm";
-import { Post } from "./entity/Post";
 
 import express from "express";
 import { ApolloServer } from 'apollo-server-express';
@@ -45,7 +44,7 @@ const main = async () => {
     const apolloserver = await new ApolloServer(schema)
 
     await apolloserver.applyMiddleware({app})
-    console.log("done")
+    console.log("apollo started")
 }
 
 

@@ -5,7 +5,7 @@
    "main": "index.js",
    "scripts": {
       "start": "ts-node src/index.ts",
-      "dev1": "nodemon dist/index.js",
+      "dev": "nodemon dist/index.js",
       "watch": "tsc -watch",
       "create": "typeorm migration:create -n 4_11",
       "generate": "typeorm migration:generate -n 4_11"

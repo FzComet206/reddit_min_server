@@ -20,6 +20,16 @@ export class UserResolver {
             }
         }
 
+        const exist = await Users.findOne({username: options.username.toLowerCase()});
+        if (exist) {
+            return {
+                errors: [{
+                    field: "duplicae username error",
+                    message: "username has already taken"
+                }]
+            }
+        }
+
         if (options.password.length <= 5) {
             return {
                 errors:[{
@@ -29,27 +39,20 @@ export class UserResolver {
             }
         }
 
-        const hashedPassword = await argon2.hash(options.password)
-        const user = Users.create({
-            username: options.username.toLowerCase(), 
-            password: hashedPassword
-        }) // TODO: user index problems here
-
         try {
+
+            const hashedPassword = await argon2.hash(options.password)
+            const user = Users.create({
+                username: options.username.toLowerCase(), 
+                password: hashedPassword
+            })
+
             await user.save()
             return {
                 user: user
             };
+            
         } catch (err) {
-
-            if (err.code = "23505" || err.detail.includes("already exists")) {
-                return {
-                    errors: [{
-                        field: "duplicae username error",
-                        message: "username has already taken"
-                    }]
-                }
-            }
 
             return {
                 errors: [{
