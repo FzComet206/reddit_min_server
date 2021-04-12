@@ -27,7 +27,7 @@ const redisConnect = async (ctx) => {
                 disableTouch: true
             }),
             cookie: {
-                maxAge: 1000 * 60 * 60 * 24,
+                maxAge: 1000 * 60 * 60,
                 httpOnly: true,                // cannot access cookie in frontend
                 secure: false                  // turn to true in prod
             },
@@ -78,7 +78,6 @@ const main = async () => {
     console.log("apollo started")
 }
 
-
 main()
 .then(()=>{
     console.log("api endpoint initialized")
@@ -86,3 +85,4 @@ main()
 .catch((err)=>{
     console.log(err)
 })
+

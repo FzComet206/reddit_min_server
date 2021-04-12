@@ -30,3 +30,13 @@ export class UserResponse {
     @Field(() => Users, { nullable: true })
     user?: Users;
 }
+
+@ObjectType()
+export class LogoutResponse {
+
+    @Field(() => Boolean)
+    success?: Boolean
+
+    @Field(() => String)
+    errors?: String
+}
