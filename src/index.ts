@@ -14,6 +14,8 @@ import * as redis from 'redis';
 import session from 'express-session';
 import connectRedis from 'connect-redis';
 
+import cors from 'cors';
+
 const redisConnect = async (ctx) => {
 
     const RedisStore = await connectRedis(session);
@@ -64,17 +66,29 @@ const createSchema = async () => {
 const main = async () => {
 
     const app = express();
+
+    app.use(
+        cors({
+            origin: "http://localhost:4000",
+            credentials: true
+        })
+    );
+
+    await redisConnect(app);
+
     app.listen(3000, ()=>{
         console.log("express server started");
     })
 
     await connectDB();
-    await redisConnect(app);
     
     const schema = await createSchema()
     const apolloserver = await new ApolloServer(schema)
 
-    await apolloserver.applyMiddleware({app})
+    await apolloserver.applyMiddleware({ 
+        app,
+        cors: false              // turn off wildcard credentials
+    })
     console.log("apollo started")
 }
 
