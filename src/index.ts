@@ -16,6 +16,7 @@ import session from 'express-session';
 import connectRedis from 'connect-redis';
 
 import cors from 'cors';
+import { COOKIE_NAME } from "./constants";
 
 const redisConnect = async (ctx) => {
 
@@ -24,7 +25,7 @@ const redisConnect = async (ctx) => {
 
     await ctx.use(
         session({
-            name: 'my-cookie',
+            name: COOKIE_NAME,
             store: new RedisStore({ 
                 client: redisClient,
                 disableTouch: true
@@ -95,7 +96,9 @@ const main = async () => {
 
 main()
 .then(()=>{
-    console.log("api endpoint initialized")
+    console.log("api endpoint initialized\n");
+    console.log("========================================================================");
+    console.log("========================================================================\n");
 })
 .catch((err)=>{
     console.log(err)

@@ -3,6 +3,7 @@ import { Users } from "../entity/User";
 import argon2 from "argon2";
 import { UserResponse, UsernamePasswordInput, LogoutResponse } from "./UserInputAndResponse";
 import { MyContext } from "../types";
+import { COOKIE_NAME } from "../constants";
 
 @Resolver()
 export class UserResolver {
@@ -22,7 +23,8 @@ export class UserResolver {
     // register user
     @Mutation(()=> UserResponse)
     async register(
-        @Arg('options') options: UsernamePasswordInput 
+        @Arg('options') options: UsernamePasswordInput,
+        @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
 
         if (options.username.length < 3) {
@@ -63,8 +65,11 @@ export class UserResolver {
             })
 
             await user.save()
+
+            req.session!.userId = user.id;
+            req.session!.userInfo = user.username;
             
-            console.log(`${user.username} just registered`);
+            console.log(`${user.username} just registered and is logged in!`);
 
             return {
                 user: user
@@ -123,7 +128,6 @@ export class UserResolver {
 
         req.session!.userId = selectUser.id;
         req.session!.userInfo = selectUser.username;
-        req.session!.other = "xddd";
 
         console.log(`${selectUser.username} just logged in!`)
 
@@ -133,30 +137,33 @@ export class UserResolver {
 
     }
 
-    @Mutation(()=> LogoutResponse)
+    @Mutation(()=> Boolean)
     async logout(
-        @Ctx() { req }: MyContext
-    ): Promise<LogoutResponse> {
+        @Ctx() { req, res }: MyContext
+    ){
+
         if (!req.session.userId) {
-            return {
-                success: false,
-                errors: "You are not logged in"
-            };
+            return false;
         }
 
         function wrapper() {
             return new Promise(resolve => {
-                req.session.destroy((res)=> {
-                    resolve(res);
+                req.session.destroy((err)=> {
+                    if (err) {
+                        console.log(err);
+                        resolve(false);
+                        return;
+                    }
+                    resolve(true);
                 })
             });
         }
 
+        console.log(`${req.session.userInfo} just logged out!`)
+
+        res.clearCookie(COOKIE_NAME);  // clear the cookie
         await wrapper(); // wrapped callback inside promise so i can await
         
-        return {
-            success: true,
-            errors: "None"
-        };
+        return true;
     }
 } 
