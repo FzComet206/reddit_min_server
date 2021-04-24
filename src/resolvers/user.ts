@@ -26,20 +26,21 @@ export class UserResolver {
         @Arg('options') options: UsernamePasswordInput 
     ): Promise<UserResponse> {
 
-        if (options.username.length <= 3) {
+        if (options.username.length < 3) {
             return {
                 errors:[{
                     field: "username",
-                    message: "username length must be greaters than 3"
+                    message: "username length must be greater than 3"
                 }]
             }
         }
 
         const exist = await Users.findOne({username: options.username.toLowerCase()});
+
         if (exist) {
             return {
-                errors: [{
-                    field: "duplicae username error",
+                errors:[{
+                    field: "username",
                     message: "username has already taken"
                 }]
             }
@@ -91,12 +92,12 @@ export class UserResolver {
             return {
                 errors: [{
                     field: "username",
-                    message: "username doesn't exist"
+                    message: "username incorrect"
                 }]
             };
         }
 
-        const valid = await argon2.verify(selectUser.password ,options.password);
+        const valid = await argon2.verify(selectUser.password, options.password);
 
         if (!valid) {
             return {
