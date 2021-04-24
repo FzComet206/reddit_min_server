@@ -5,6 +5,7 @@ dist/
 tmp/
 temp/
 src/migration/
+src/config.ts/
 
 package-lock.json
 ormconfig.json

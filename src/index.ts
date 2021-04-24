@@ -1,4 +1,5 @@
 import { MyContext } from "./types";
+import config from  "./config";
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 
@@ -69,14 +70,14 @@ const main = async () => {
 
     app.use(
         cors({
-            origin: "http://localhost:4000",
+            origin: config.orgin,
             credentials: true
         })
     );
 
     await redisConnect(app);
 
-    app.listen(3000, ()=>{
+    app.listen(config.port, ()=>{
         console.log("express server started");
     })
 
