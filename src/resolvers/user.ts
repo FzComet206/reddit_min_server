@@ -16,7 +16,6 @@ export class UserResolver {
            return null
        }
        const currentUser = Users.findOne({id: req.session.userId});
-       console.log(req.session)
        return currentUser
     }
     
@@ -64,6 +63,9 @@ export class UserResolver {
             })
 
             await user.save()
+            
+            console.log(`${user.username} just registered`);
+
             return {
                 user: user
             };
@@ -122,6 +124,8 @@ export class UserResolver {
         req.session!.userId = selectUser.id;
         req.session!.userInfo = selectUser.username;
         req.session!.other = "xddd";
+
+        console.log(`${selectUser.username} just logged in!`)
 
         return {
             user: selectUser
