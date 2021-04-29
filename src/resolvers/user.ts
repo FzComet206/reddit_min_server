@@ -1,67 +1,44 @@
 import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
-import { Users } from "../entity/User";
+// import { Users } from "../entity/User";
+import { OpUsers } from "../entity/OpUsers";
 import argon2 from "argon2";
-import { UserResponse, UsernamePasswordInput, LogoutResponse } from "./UserInputAndResponse";
+import { UserResponse, UsernamePasswordEmailInput, LogoutResponse } from "./UserInputAndResponse";
 import { MyContext } from "../types";
 import { COOKIE_NAME } from "../constants";
+import { validateRegister } from "../utils/validateRegister";
 
 @Resolver()
 export class UserResolver {
 
     // query self to check if logged in
-    @Query(()=> Users, { nullable: true })
+    @Query(()=> OpUsers, { nullable: true })
     me(
         @Ctx() { req }: MyContext
     ) {
        if (!req.session.userId) {
            return null
        }
-       const currentUser = Users.findOne({id: req.session.userId});
+       const currentUser = OpUsers.findOne({id: req.session.userId});
        return currentUser
     }
     
     // register user
     @Mutation(()=> UserResponse)
     async register(
-        @Arg('options') options: UsernamePasswordInput,
+        @Arg('options') options: UsernamePasswordEmailInput,
         @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
 
-        if (options.username.length < 3) {
-            return {
-                errors:[{
-                    field: "username",
-                    message: "username length must be greater than 3"
-                }]
-            }
-        }
-
-        const exist = await Users.findOne({username: options.username.toLowerCase()});
-
-        if (exist) {
-            return {
-                errors:[{
-                    field: "username",
-                    message: "username has already taken"
-                }]
-            }
-        }
-
-        if (options.password.length <= 5) {
-            return {
-                errors:[{
-                    field: "password",
-                    message: "passsword length must be at least 6"
-                }]
-            }
-        }
+        const hasError = await validateRegister(options);
+        if (hasError) { return { errors: hasError } }
 
         try {
 
             const hashedPassword = await argon2.hash(options.password)
-            const user = Users.create({
+            const user = OpUsers.create({
                 username: options.username.toLowerCase(), 
-                password: hashedPassword
+                password: hashedPassword,
+                email: options.email.toLowerCase(),
             })
 
             await user.save()
@@ -89,11 +66,18 @@ export class UserResolver {
     // handle login
     @Mutation(()=> UserResponse)
     async login(
-        @Arg('options') options: UsernamePasswordInput,
+        @Arg('usernameOrEmail') usernameOrEmail: string,
+        @Arg('password') password: string,
         @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
 
-        const selectUser = await Users.findOne({username: options.username.toLowerCase()});
+        let selectUser;
+
+        if (usernameOrEmail.includes('@')) {
+            selectUser = await OpUsers.findOne({email: usernameOrEmail.toLowerCase()});
+        } else {
+            selectUser = await OpUsers.findOne({username: usernameOrEmail.toLowerCase()});
+        }
 
         if (!selectUser) {
             return {
@@ -104,7 +88,7 @@ export class UserResolver {
             };
         }
 
-        const valid = await argon2.verify(selectUser.password, options.password);
+        const valid = await argon2.verify(selectUser.password, password);
 
         if (!valid) {
             return {
@@ -166,4 +150,12 @@ export class UserResolver {
         
         return true;
     }
+
+    // @Mutation(()=> Boolean)
+    // async forgotpassword(
+    //     @Arg('email') email: string,
+    //     @Ctx() { req, res }: MyContext,
+    // ) {
+    //     const user = await Users.findOne({emails: email})
+    // }
 } 

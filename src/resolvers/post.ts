@@ -5,7 +5,8 @@ import { Post } from "../entity/Post";
 export class PostResolver {
 
     @Query(() => [Post], { nullable: true })
-    posts() {
+    async posts() {
+        // await sleep(3000)
         return Post.find({});
     }
 

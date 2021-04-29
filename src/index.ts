@@ -1,22 +1,24 @@
-import { MyContext } from "./types";
-import config from  "./config";
+// Libraries
 import "reflect-metadata";
 import { createConnection } from "typeorm";
-
-import express from "express";
-import { ApolloServer } from 'apollo-server-express';
-
-import { buildSchema } from 'type-graphql';
-
-import { PostResolver } from "./resolvers/post";
-import { UserResolver } from "./resolvers/user";
-
 import * as redis from 'redis';
 import session from 'express-session';
 import connectRedis from 'connect-redis';
-
 import cors from 'cors';
+import { buildSchema } from 'type-graphql';
+import express from "express";
+import { ApolloServer } from 'apollo-server-express';
+
+// Api and Resolvers
+import { PostResolver } from "./resolvers/post";
+import { UserResolver } from "./resolvers/user";
+
+// Utils
+import { MyContext } from "./types";
+import config from  "./config";
 import { COOKIE_NAME } from "./constants";
+import { sendEmail } from "./utils/sendEmail";
+
 
 const redisConnect = async (ctx) => {
 
@@ -71,7 +73,7 @@ const main = async () => {
 
     app.use(
         cors({
-            origin: config.orgin,
+            origin: config.orgindev,
             credentials: true
         })
     );
@@ -92,6 +94,9 @@ const main = async () => {
         cors: false              // turn off wildcard credentials
     })
     console.log("apollo started")
+
+    await sendEmail("caozibo2000@gmail.com", "hihihihi from node")
+    console.log("email sent")
 }
 
 main()

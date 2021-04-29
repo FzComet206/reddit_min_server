@@ -1,5 +1,6 @@
 import { Field, InputType, ObjectType } from "type-graphql";
-import { Users } from "../entity/User";
+import { OpUsers } from "../entity/OpUsers";
+// import { Users } from "../entity/User";
 
 @ObjectType()
 class FieldError {
@@ -12,13 +13,16 @@ class FieldError {
 }
 
 @InputType()
-export class UsernamePasswordInput {
+export class UsernamePasswordEmailInput {
 
     @Field()
     username: string;
 
     @Field()
     password: string;
+
+    @Field()
+    email: string;
 }
 
 @ObjectType()
@@ -27,8 +31,8 @@ export class UserResponse {
     @Field(() => [FieldError], { nullable: true })
     errors?: FieldError[];
 
-    @Field(() => Users, { nullable: true })
-    user?: Users;
+    @Field(() => OpUsers, { nullable: true })
+    user?: OpUsers;
 }
 
 @ObjectType()
