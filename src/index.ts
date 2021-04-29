@@ -95,8 +95,8 @@ const main = async () => {
     })
     console.log("apollo started")
 
-    await sendEmail("caozibo2000@gmail.com", "hihihihi from node")
-    console.log("email sent")
+    // await sendEmail("caozibo2000@gmail.com", "hihihihi from node")
+    // console.log("email sent")
 }
 
 main()

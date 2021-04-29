@@ -22,6 +22,9 @@ export class UsernamePasswordEmailInput {
     password: string;
 
     @Field()
+    confirmPassword: string;
+
+    @Field()
     email: string;
 }
 

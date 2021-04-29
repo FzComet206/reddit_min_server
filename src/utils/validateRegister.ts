@@ -10,19 +10,19 @@ export const validateRegister = async (options: UsernamePasswordEmailInput) => {
         }]
     }
 
+    if (options.username.includes('@')) {
+        return [{
+            field: "username",
+            message: "username cannot contain @"
+    }]
+    }
+
     const exist = await OpUsers.findOne({username: options.username.toLowerCase()});
 
     if (exist) {
         return [{
                 field: "username",
                 message: "username is taken"
-        }]
-    }
-
-    if (options.password.length < 6 || options.password.length > 20) {
-        return [{
-                field: "password",
-                message: "passsword must be 6 to 20 characters long"
         }]
     }
 
@@ -39,6 +39,20 @@ export const validateRegister = async (options: UsernamePasswordEmailInput) => {
         return [{
                 field: "email",
                 message: "this email is already registered"
+        }]
+    }
+
+    if (options.password.length < 6 || options.password.length > 20) {
+        return [{
+                field: "password",
+                message: "passsword must be 6 to 20 characters long"
+        }]
+    }
+
+    if (options.confirmPassword != options.password) {
+        return [{
+                field: "confirmPassword",
+                message: "confirm password not matched"
         }]
     }
 

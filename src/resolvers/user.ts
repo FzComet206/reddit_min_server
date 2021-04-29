@@ -39,12 +39,14 @@ export class UserResolver {
                 username: options.username.toLowerCase(), 
                 password: hashedPassword,
                 email: options.email.toLowerCase(),
+                nickname: options.username
             })
 
             await user.save()
 
             req.session!.userId = user.id;
-            req.session!.userInfo = user.username;
+            req.session!.userName = user.username;
+            req.session!.userNickname = user.nickname
             
             console.log(`${user.username} just registered and is logged in!`);
 
@@ -56,7 +58,7 @@ export class UserResolver {
 
             return {
                 errors: [{
-                    field: "unknown error",
+                    field: "email",
                     message: "unknow error lol get rekt"
                 }]
             }
@@ -82,8 +84,8 @@ export class UserResolver {
         if (!selectUser) {
             return {
                 errors: [{
-                    field: "username",
-                    message: "username incorrect"
+                    field: "usernameOrEmail",
+                    message: "username/email incorrect"
                 }]
             };
         }
@@ -111,7 +113,7 @@ export class UserResolver {
         // 5. make-request to redis with decrypted key and look up data
 
         req.session!.userId = selectUser.id;
-        req.session!.userInfo = selectUser.username;
+        req.session!.userName = selectUser.username;
 
         console.log(`${selectUser.username} just logged in!`)
 
@@ -143,7 +145,7 @@ export class UserResolver {
             });
         }
 
-        console.log(`${req.session.userInfo} just logged out!`)
+        console.log(`${req.session.userName} just logged out!`)
 
         res.clearCookie(COOKIE_NAME);  // clear the cookie
         await wrapper(); // wrapped callback inside promise so i can await
