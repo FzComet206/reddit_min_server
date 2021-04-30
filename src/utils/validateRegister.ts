@@ -5,15 +5,15 @@ export const validateRegister = async (options: UsernamePasswordEmailInput) => {
 
     if (options.username.length < 3 || options.username.length > 18) {
         return [{
-                field: "username",
-                message: "username must be 3 to 18 characters long"
+            field: "username",
+            message: "username must be 3 to 18 characters long"
         }]
     }
 
     if (options.username.includes('@')) {
         return [{
-            field: "username",
-            message: "username cannot contain @"
+        field: "username",
+        message: "username cannot contain @"
     }]
     }
 
@@ -21,15 +21,15 @@ export const validateRegister = async (options: UsernamePasswordEmailInput) => {
 
     if (exist) {
         return [{
-                field: "username",
-                message: "username is taken"
+            field: "username",
+            message: "username is taken"
         }]
     }
 
     if (!options.email.includes('@')) {
         return [{
-                field: "email",
-                message: "email format invalid"
+            field: "email",
+            message: "email format invalid"
         }]
     }
 
@@ -37,24 +37,31 @@ export const validateRegister = async (options: UsernamePasswordEmailInput) => {
 
     if (emailexist) {
         return [{
-                field: "email",
-                message: "this email is already registered"
+            field: "email",
+            message: "this email is already registered"
         }]
     }
 
     if (options.password.length < 6 || options.password.length > 20) {
         return [{
-                field: "password",
-                message: "passsword must be 6 to 20 characters long"
+            field: "password",
+            message: "passsword must be 6 to 20 characters long"
         }]
     }
 
     if (options.confirmPassword != options.password) {
         return [{
-                field: "confirmPassword",
-                message: "confirm password not matched"
+            field: "confirmPassword",
+            message: "confirm password not matched"
         }]
     }
+
+    // if ( !options.password || options.username.length == 0) {
+    //     return [{
+    //         field: "username",
+    //         message: "please do not use api directly"
+    //     }]
+    // }
 
     return null;
 }

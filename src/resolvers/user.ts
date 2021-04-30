@@ -4,8 +4,14 @@ import { OpUsers } from "../entity/OpUsers";
 import argon2 from "argon2";
 import { UserResponse, UsernamePasswordEmailInput, LogoutResponse } from "./UserInputAndResponse";
 import { MyContext } from "../types";
-import { COOKIE_NAME } from "../constants";
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { validateRegister } from "../utils/validateRegister";
+import { v4 } from 'uuid';
+
+import { sendEmail } from "../utils/sendEmail";
+import { sleep } from "../utils/sleep";
+
+import config from "../config"
 
 @Resolver()
 export class UserResolver {
@@ -20,6 +26,31 @@ export class UserResolver {
        }
        const currentUser = OpUsers.findOne({id: req.session.userId});
        return currentUser
+    }
+
+    @Mutation(()=> Boolean)
+    async forgotPassword(
+        @Arg("email") email: string,
+        @Ctx() { redis }: MyContext
+        
+    ) {
+        const user = await OpUsers.findOne({email: email});
+        if (!user) {
+            await sleep(3000);    // prevent phishing
+            return true;
+        }
+
+        const token = v4();
+        
+        // create a token and store userid/token
+        // when user click on link, token will be sent back and we do look up
+        await redis.set(FORGET_PASSWORD_PREFIX + token, user.id, 'ex', 1000*60*60)
+        await sendEmail(
+            email, 
+            `<p>Click <a href="${config.orgindev}/change-passsword/:${token}">here</a> to reset your Lireddit Password!`
+            );
+
+        return true;
     }
     
     // register user

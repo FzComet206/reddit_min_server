@@ -1,13 +1,15 @@
 // Libraries
 import "reflect-metadata";
 import { createConnection } from "typeorm";
-import * as redis from 'redis';
+// import * as redis from 'redis';
 import session from 'express-session';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
 import { buildSchema } from 'type-graphql';
 import express from "express";
 import { ApolloServer } from 'apollo-server-express';
+import Redis from 'ioredis';
+
 
 // Api and Resolvers
 import { PostResolver } from "./resolvers/post";
@@ -23,13 +25,14 @@ import { sendEmail } from "./utils/sendEmail";
 const redisConnect = async (ctx) => {
 
     const RedisStore = await connectRedis(session);
-    const redisClient = await redis.createClient();
+    // const redisClient = await redis.createClient();
+    const redis = new Redis(); 
 
     await ctx.use(
         session({
             name: COOKIE_NAME,
             store: new RedisStore({ 
-                client: redisClient,
+                client: redis,
                 disableTouch: true
             }),
             cookie: {
@@ -38,11 +41,13 @@ const redisConnect = async (ctx) => {
                 secure: false                  // turn to true in prod
             },
             saveUninitialized: false,
-            secret: '174115261',
+            secret: '11111111',
             resave: false
         })
     )
     console.log("redis middleware connected to express")
+
+    return redis; // return redis context
 }
  
 const connectDB = async () => {
@@ -55,13 +60,14 @@ const connectDB = async () => {
     }
 }
 
-const createSchema = async () => {
+const createSchema = async (redisContext) => {
     const schema = {
         schema: await buildSchema({
             resolvers: [UserResolver, PostResolver],
             validate: true
             }),
-        context: ({req, res}): MyContext => ({req, res})  // we can access sessions using req context
+        context: ({req, res}): MyContext => ({req, res, redis: redisContext})  // we can access sessions using req context
+        // context is a special object that is accessible by all your resolvers 
     }
     console.log("schema created")
     return schema;
@@ -78,25 +84,21 @@ const main = async () => {
         })
     );
 
-    await redisConnect(app);
-
     app.listen(config.port, ()=>{
         console.log("express server started");
     })
 
     await connectDB();
     
-    const schema = await createSchema()
-    const apolloserver = await new ApolloServer(schema)
+    const redisContext = await redisConnect(app);
+    const schema = await createSchema(redisContext);
+    const apolloserver = await new ApolloServer(schema);
 
     await apolloserver.applyMiddleware({ 
         app,
         cors: false              // turn off wildcard credentials
     })
     console.log("apollo started")
-
-    // await sendEmail("caozibo2000@gmail.com", "hihihihi from node")
-    // console.log("email sent")
 }
 
 main()
