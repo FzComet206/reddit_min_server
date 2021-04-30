@@ -12,9 +12,13 @@ import { sendEmail } from "../utils/sendEmail";
 import { sleep } from "../utils/sleep";
 
 import config from "../config"
+import {getRepository} from "typeorm";
+
 
 @Resolver()
 export class UserResolver {
+
+    userRepo = getRepository(OpUsers)
 
     // query self to check if logged in
     @Query(()=> OpUsers, { nullable: true })
@@ -33,7 +37,7 @@ export class UserResolver {
         @Arg("email") email: string,
         @Ctx() { redis }: MyContext
         
-    ) {
+    ): Promise<Boolean> {
         const user = await OpUsers.findOne({email: email});
         if (!user) {
             await sleep(3000);    // prevent phishing
@@ -47,10 +51,85 @@ export class UserResolver {
         await redis.set(FORGET_PASSWORD_PREFIX + token, user.id, 'ex', 1000*60*60)
         await sendEmail(
             email, 
-            `<p>Click <a href="${config.orgindev}/change-passsword/:${token}">here</a> to reset your Lireddit Password!`
+            `<p>Click <a href="${config.orgindev}/${FORGET_PASSWORD_PREFIX}${token}">here</a> to reset your Cl Reddit Password!`
             );
 
         return true;
+    }
+
+    @Mutation(()=> UserResponse)
+    async changePassword(
+        @Arg("newPassword") newPassword: string,
+        @Arg("confirmPassword") confirmPassword: string,
+        @Arg("token") token: string,
+        @Ctx() { redis, req }: MyContext
+    ): Promise<UserResponse> {
+        // validate password and confirm password
+
+        const key = FORGET_PASSWORD_PREFIX + token;
+        const userId = await redis.get(key);
+
+        if (!userId) {
+            return {
+                errors: [{
+                    field: "token",
+                    message: "token expired"
+                    },
+                ],
+            };
+        }
+
+        if (newPassword.length < 6 || newPassword.length > 20) {
+            return {
+                errors: [{
+                field: "newPassword",
+                message: "passsword must be 6 to 20 characters long"
+                    },
+                ],
+            };
+        }
+    
+        if (confirmPassword != newPassword) {
+            return {
+                errors:[{
+                field: "confirmPassword",
+                message: "confirm password not matched"
+                    },
+                ],
+            };
+        }
+
+        const userRepo = getRepository(OpUsers);
+        const user = await userRepo.findOne(userId);
+
+        if (!user) {
+            return {
+                errors: [{
+                    field: "token",
+                    message: "user no longer exist for some reason"
+                    },
+                ],
+            };
+        }
+
+        try {
+
+            await redis.del(key);
+            const hashedPassword = await argon2.hash(newPassword)
+            user.password = hashedPassword;
+            await userRepo.save(user);
+
+        } catch (err) {
+            console.log(err)
+        }
+
+        req.session!.userId = user.id;
+        req.session!.userName = user.username;
+        req.session!.userNickname = user.nickname;
+
+        return {
+            user: user
+        }
     }
     
     // register user
@@ -145,6 +224,7 @@ export class UserResolver {
 
         req.session!.userId = selectUser.id;
         req.session!.userName = selectUser.username;
+        req.session!.userNickname = selectUser.nickname;
 
         console.log(`${selectUser.username} just logged in!`)
 
