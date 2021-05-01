@@ -4,46 +4,42 @@ import { OpUsers } from "../entity/OpUsers";
 
 @ObjectType()
 class FieldError {
+	@Field()
+	field: string;
 
-    @Field()
-    field: string;
-
-    @Field()
-    message: string;
+	@Field()
+	message: string;
 }
 
 @InputType()
 export class UsernamePasswordEmailInput {
+	@Field()
+	username: string;
 
-    @Field()
-    username: string;
+	@Field()
+	password: string;
 
-    @Field()
-    password: string;
+	@Field()
+	confirmPassword: string;
 
-    @Field()
-    confirmPassword: string;
-
-    @Field()
-    email: string;
+	@Field()
+	email: string;
 }
 
 @ObjectType()
 export class UserResponse {
+	@Field(() => [FieldError], { nullable: true })
+	errors?: FieldError[];
 
-    @Field(() => [FieldError], { nullable: true })
-    errors?: FieldError[];
-
-    @Field(() => OpUsers, { nullable: true })
-    user?: OpUsers;
+	@Field(() => OpUsers, { nullable: true })
+	user?: OpUsers;
 }
 
 @ObjectType()
 export class LogoutResponse {
+	@Field(() => Boolean)
+	success?: Boolean;
 
-    @Field(() => Boolean)
-    success?: Boolean
-
-    @Field(() => String)
-    errors?: String
+	@Field(() => String)
+	errors?: String;
 }
