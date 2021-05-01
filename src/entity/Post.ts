@@ -6,7 +6,10 @@ import {
 	BaseEntity,
 	CreateDateColumn,
 	UpdateDateColumn,
+	ManyToOne,
 } from "typeorm";
+import { OpUsers } from "./OpUsers";
+
 
 @Entity()
 @ObjectType() // both object type and entity
@@ -16,12 +19,23 @@ export class Post extends BaseEntity {
 	id: number;
 
 	@Field(() => String)
-	@Column({ type: "varchar", default: "Admin" })
-	username: string;
+	@Column({ type: "varchar", default: "Empty Title"})
+	title: string;
 
 	@Field(() => String)
-	@Column({ type: "varchar" })
-	title: string;
+	@Column({ type: "varchar", default: "Empty Post"})
+	content: string;
+
+	@Field(() => Number)
+	@Column({ type: "int", default: 0 })
+	points!: number;
+
+	@Field(() => Number)
+	@Column()
+	creatorId: number;
+
+	@ManyToOne(()=> OpUsers, user => user.posts)
+	creator: OpUsers;
 
 	@Field(() => String)
 	@CreateDateColumn()

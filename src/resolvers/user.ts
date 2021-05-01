@@ -10,13 +10,13 @@ import {
 import { MyContext } from "../types";
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { validateRegister } from "../utils/validateRegister";
-import { v4 } from "uuid";
+import { stringify, v4 } from "uuid";
 
 import { sendEmail } from "../utils/sendEmail";
 import { sleep } from "../utils/sleep";
 
 import config from "../config";
-import { getRepository } from "typeorm";
+import { getConnection, getRepository } from "typeorm";
 
 @Resolver()
 export class UserResolver {
@@ -26,8 +26,7 @@ export class UserResolver {
 		if (!req.session.userId) {
 			return null;
 		}
-		const currentUser = OpUsers.findOne({ id: req.session.userId });
-		return currentUser;
+		return OpUsers.findOne({ id: req.session.userId });
 	}
 
 	@Mutation(() => Boolean)
@@ -70,8 +69,9 @@ export class UserResolver {
 
 		const key = FORGET_PASSWORD_PREFIX + token;
 		const userId = await redis.get(key);
+		const ID = parseInt(userId);
 
-		if (!userId) {
+		if (!ID) {
 			return {
 				errors: [
 					{
@@ -104,8 +104,7 @@ export class UserResolver {
 			};
 		}
 
-		const userRepo = getRepository(OpUsers);
-		const user = await userRepo.findOne(userId);
+		const user = await OpUsers.findOne(ID);
 
 		if (!user) {
 			return {
@@ -120,9 +119,10 @@ export class UserResolver {
 
 		try {
 			await redis.del(key);
-			const hashedPassword = await argon2.hash(newPassword);
-			user.password = hashedPassword;
-			await userRepo.save(user);
+			await OpUsers.update(
+				{ id: ID },
+				{ password: await argon2.hash(newPassword) }
+			);
 		} catch (err) {
 			console.log(err);
 		}
@@ -147,27 +147,37 @@ export class UserResolver {
 			return { errors: hasError };
 		}
 
+		let user;
 		try {
 			const hashedPassword = await argon2.hash(options.password);
-			const user = OpUsers.create({
-				username: options.username.toLowerCase(),
-				password: hashedPassword,
-				email: options.email.toLowerCase(),
-				nickname: options.username,
+
+			await getConnection()
+				.createQueryBuilder()
+				.insert()
+				.into(OpUsers)
+				.values({
+					username: options.username.toLowerCase(),
+					password: hashedPassword,
+					email: options.email.toLowerCase(),
+					nickname: options.username,
+				})
+				.execute();
+			
+			const selectUser = await OpUsers.findOne({
+				username: options.username.toLowerCase()
 			});
 
-			await user.save();
+			req.session!.userId = selectUser.id;
+			req.session!.userName = selectUser.username.toLowerCase();
+			req.session!.userNickname = selectUser.nickname;
 
-			req.session!.userId = user.id;
-			req.session!.userName = user.username;
-			req.session!.userNickname = user.nickname;
-
-			console.log(`${user.username} just registered and is logged in!`);
+			console.log(`${selectUser.username} just registered and is logged in!`);
 
 			return {
-				user: user,
+				user: selectUser
 			};
 		} catch (err) {
+			console.log(err)
 			return {
 				errors: [
 					{

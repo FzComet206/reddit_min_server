@@ -2,6 +2,15 @@ import { Field, InputType, ObjectType } from "type-graphql";
 import { OpUsers } from "../entity/OpUsers";
 // import { Users } from "../entity/User";
 
+@InputType()
+export class PostInput {
+	@Field()
+	title: string;
+
+	@Field()
+	text: string;
+}
+
 @ObjectType()
 class FieldError {
 	@Field()

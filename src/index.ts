@@ -49,7 +49,7 @@ const redisConnect = async (ctx) => {
 
 const connectDB = async () => {
 	try {
-		const connect = await createConnection();
+		const connect = await createConnection(); 
 		console.log("DB connected");
 		return connect;
 	} catch (error) {

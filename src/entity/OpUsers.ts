@@ -4,13 +4,15 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
+	OneToMany,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
+import { Post } from "./Post";
 
 @Entity()
 @ObjectType()
-export class OpUsers extends BaseEntity {
+export class OpUsers extends BaseEntity {  // BaseEntity allows OpUsers.find()
 	@Field(() => ID)
 	@PrimaryGeneratedColumn()
 	id: number;
@@ -30,6 +32,9 @@ export class OpUsers extends BaseEntity {
 	@Field(() => String)
 	@Column({ type: "varchar" })
 	nickname!: string;
+
+	@OneToMany(() => Post, posts => posts.creator)
+	posts: Post[]
 
 	@Field(() => Boolean)
 	@Column({ type: "bool", default: false })
