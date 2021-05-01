@@ -24,7 +24,7 @@ export class Post extends BaseEntity {
 
 	@Field(() => String)
 	@Column({ type: "varchar", default: "Empty Post"})
-	content: string;
+	text: string;
 
 	@Field(() => Number)
 	@Column({ type: "int", default: 0 })

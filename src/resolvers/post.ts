@@ -1,3 +1,4 @@
+import { text } from "express";
 import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { Post } from "../entity/Post";
 import { isAuth } from "../middleware/isAuth";
@@ -24,6 +25,7 @@ export class PostResolver {
 		@Ctx() { req }: MyContext
 	): Promise<Post> {
 		// this is two sql queries
+		
 		return await Post.create({
 			...input,
 			creatorId: req.session.userId,
@@ -33,15 +35,15 @@ export class PostResolver {
 	@Mutation(() => Post, { nullable: true })
 	async updatePost(
 		@Arg("id", () => Int) id: number,
-		@Arg("content", () => String, { nullable: false }) content: string
+		@Arg("content", () => String, { nullable: false }) text: string
 	): Promise<Post> {
 		const post = await Post.findOne(id);
 		if (!post) {
 			return null;
 		}
 
-		if (typeof content != undefined) {
-			await Post.update({ id }, { content })
+		if (typeof text != undefined) {
+			await Post.update({ id }, { text })
 				.then((response) => response.raw[0])
 				.catch(() => console.log("update error"));
 
