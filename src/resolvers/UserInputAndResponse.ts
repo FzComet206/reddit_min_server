@@ -1,5 +1,6 @@
 import { Field, InputType, ObjectType } from "type-graphql";
 import { OpUsers } from "../entity/OpUsers";
+import { Post } from "../entity/Post";
 // import { Users } from "../entity/User";
 
 @InputType()
@@ -51,4 +52,13 @@ export class LogoutResponse {
 
 	@Field(() => String)
 	errors?: String;
+}
+
+@ObjectType()
+export class PostResponse {
+	@Field(() => [FieldError], { nullable: true })
+	errors?: FieldError[];
+
+	@Field(() => Boolean)
+	success?: Boolean;
 }

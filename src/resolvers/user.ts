@@ -280,12 +280,4 @@ export class UserResolver {
 
 		return true;
 	}
-
-	// @Mutation(()=> Boolean)
-	// async forgotpassword(
-	//     @Arg('email') email: string,
-	//     @Ctx() { req, res }: MyContext,
-	// ) {
-	//     const user = await Users.findOne({emails: email})
-	// }
 }

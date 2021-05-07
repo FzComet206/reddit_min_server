@@ -1,9 +1,17 @@
-import { text } from "express";
-import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import {
+	Arg,
+	Ctx,
+	Int,
+	Mutation,
+	Query,
+	Resolver,
+	UseMiddleware,
+} from "type-graphql";
 import { Post } from "../entity/Post";
 import { isAuth } from "../middleware/isAuth";
 import { MyContext } from "../types";
-import { PostInput } from "./UserInputAndResponse";
+import { validatePost } from "../utils/validatePost";
+import { PostInput, PostResponse } from "./UserInputAndResponse";
 
 @Resolver()
 export class PostResolver {
@@ -19,17 +27,47 @@ export class PostResolver {
 	}
 
 	@UseMiddleware(isAuth)
-	@Mutation(() => Post)
+	@Mutation(() => PostResponse)
 	async createPost(
 		@Arg("input") input: PostInput,
 		@Ctx() { req }: MyContext
-	): Promise<Post> {
+	): Promise<PostResponse> {
 		// this is two sql queries
-		
-		return await Post.create({
-			...input,
-			creatorId: req.session.userId,
-		}).save();
+
+		const ok = validatePost(input.title, input.text);
+
+		if (!ok) {
+			return {
+				errors: [
+					{
+						field: "text",
+						message: "server error: invalid post",
+					},
+				],
+				success: false
+			};
+		}
+
+		try {
+			await Post.create({
+				...input,
+				creatorId: req.session.userId,
+			}).save();
+			return {
+				success: true,
+			};
+		} catch (e) {
+			console.log(e);
+			return {
+				errors: [
+					{
+						field: "text",
+						message: "server error: unknown",
+					},
+				],
+				success: false,
+			};
+		}
 	}
 
 	@Mutation(() => Post, { nullable: true })
