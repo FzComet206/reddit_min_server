@@ -20,10 +20,10 @@ import { PostInput, PostResponse } from "./UserInputAndResponse";
 export class PostResolver {
 	@Query(() => [Post], { nullable: true })
 	async posts(
-		@Arg("limit") limit: number,
+		@Arg("limit", () => Int) limit: number,
 		@Arg("cursor", () => String, { nullable: true }) cursor: string | null
 	): Promise<Post[] | undefined> {
-		await sleep(300);
+		await sleep(600);
 		const realLimit = Math.min(20, limit);
 		const qb = getConnection()
 			.getRepository(Post)
