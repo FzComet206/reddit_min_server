@@ -1,3 +1,4 @@
+import { max } from "class-validator";
 import {
 	Arg,
 	Ctx,
@@ -7,18 +8,37 @@ import {
 	Resolver,
 	UseMiddleware,
 } from "type-graphql";
+import { getConnection } from "typeorm";
 import { Post } from "../entity/Post";
 import { isAuth } from "../middleware/isAuth";
 import { MyContext } from "../types";
+import { sleep } from "../utils/sleep";
 import { validatePost } from "../utils/validatePost";
 import { PostInput, PostResponse } from "./UserInputAndResponse";
 
 @Resolver()
 export class PostResolver {
 	@Query(() => [Post], { nullable: true })
-	async posts(): Promise<Post[] | undefined> {
-		// await sleep(3000)
-		return await Post.find({});
+	async posts(
+		@Arg("limit") limit: number,
+		@Arg("cursor", () => String, { nullable: true }) cursor: string | null
+	): Promise<Post[] | undefined> {
+		await sleep(300);
+		const realLimit = Math.min(20, limit);
+		const qb = getConnection()
+			.getRepository(Post)
+			.createQueryBuilder("p")
+			.orderBy('"createdAt"', "DESC") // double quotes to keep uppercase
+			.take(realLimit);
+
+		if (cursor) {
+			qb.where('"createdAt" < :cursor', {
+				cursor: new Date(parseInt(cursor)),
+			});
+		}
+
+		// awsome pagenation
+		return await qb.getMany();
 	}
 
 	@Query(() => Post, { nullable: true })
@@ -44,7 +64,7 @@ export class PostResolver {
 						message: "server error: invalid post",
 					},
 				],
-				success: false
+				success: false,
 			};
 		}
 
