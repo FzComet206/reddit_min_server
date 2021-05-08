@@ -2,10 +2,12 @@ import { max } from "class-validator";
 import {
 	Arg,
 	Ctx,
+	FieldResolver,
 	Int,
 	Mutation,
 	Query,
 	Resolver,
+	Root,
 	UseMiddleware,
 } from "type-graphql";
 import { getConnection } from "typeorm";
@@ -16,8 +18,16 @@ import { sleep } from "../utils/sleep";
 import { validatePost } from "../utils/validatePost";
 import { PostInput, PostResponse } from "./UserInputAndResponse";
 
-@Resolver()
+@Resolver(Post)
 export class PostResolver {
+
+	@FieldResolver(() => String)   // graphql thing
+	textSnippet(
+		@Root() root: Post,
+	) {
+		return root.text.slice(0, 400);
+	}
+
 	@Query(() => [Post], { nullable: true })
 	async posts(
 		@Arg("limit", () => Int) limit: number,
