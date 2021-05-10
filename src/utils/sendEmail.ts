@@ -25,3 +25,5 @@ export async function sendEmail(to: string, html: string) {
 	console.log("message sent to: ", info.messageId);
 	console.log("preview urls: ", nodemailer.getTestMessageUrl(info));
 }
+
+// todo actually send email

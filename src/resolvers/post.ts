@@ -16,30 +16,28 @@ import { isAuth } from "../middleware/isAuth";
 import { MyContext } from "../types";
 import { sleep } from "../utils/sleep";
 import { validatePost } from "../utils/validatePost";
-import { PostInput, PostResponse } from "./UserInputAndResponse";
+import { PaginatedPost, PostInput, PostResponse } from "./UserInputAndResponse";
 
 @Resolver(Post)
 export class PostResolver {
-
-	@FieldResolver(() => String)   // graphql thing
-	textSnippet(
-		@Root() root: Post,
-	) {
+	@FieldResolver(() => String) // graphql thing
+	textSnippet(@Root() root: Post) {
 		return root.text.slice(0, 400);
 	}
 
-	@Query(() => [Post], { nullable: true })
+	@Query(() => PaginatedPost, { nullable: true })
 	async posts(
 		@Arg("limit", () => Int) limit: number,
 		@Arg("cursor", () => String, { nullable: true }) cursor: string | null
-	): Promise<Post[] | undefined> {
-		await sleep(600);
-		const realLimit = Math.min(20, limit);
+	): Promise<PaginatedPost | undefined> {
+		// await sleep(600);
+		const realLimit = Math.min(15, limit); // fetch one more than user asked
+		const realLimitPlueOne = realLimit + 1;
 		const qb = getConnection()
 			.getRepository(Post)
 			.createQueryBuilder("p")
 			.orderBy('"createdAt"', "DESC") // double quotes to keep uppercase
-			.take(realLimit);
+			.take(realLimitPlueOne);
 
 		if (cursor) {
 			qb.where('"createdAt" < :cursor', {
@@ -48,7 +46,11 @@ export class PostResolver {
 		}
 
 		// awsome pagenation
-		return await qb.getMany();
+		const posts = await qb.getMany();
+		return {
+			post: posts.slice(0, realLimit),
+			hasMore: posts.length === realLimitPlueOne,
+		};
 	}
 
 	@Query(() => Post, { nullable: true })

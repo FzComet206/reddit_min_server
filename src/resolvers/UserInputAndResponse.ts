@@ -62,3 +62,12 @@ export class PostResponse {
 	@Field(() => Boolean)
 	success?: Boolean;
 }
+
+@ObjectType()
+export class PaginatedPost {
+	@Field(() => [Post])
+	post: Post[];
+
+	@Field(() => Boolean)
+	hasMore: Boolean;
+}

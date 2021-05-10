@@ -50,6 +50,9 @@ export class UserResolver {
 			"ex",
 			1000 * 60 * 60
 		);
+
+		// todo destroy token in redis after expire
+
 		await sendEmail(
 			email,
 			`<p>Click <a href="${config.orgindev}/${FORGET_PASSWORD_PREFIX}${token}">here</a> to reset your Cl Reddit Password!`
@@ -127,6 +130,7 @@ export class UserResolver {
 			console.log(err);
 		}
 
+		// todo destroy token in redis
 		req.session!.userId = user.id;
 		req.session!.userName = user.username;
 		req.session!.userNickname = user.nickname;

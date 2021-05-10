@@ -32,6 +32,8 @@ const redisConnect = async (ctx) => {
 				client: redis,
 				disableTouch: true,
 			}),
+			// todo destroy cookie in redis after expiration?
+			// log previous cookie out when logged in again
 			cookie: {
 				maxAge: 1000 * 60 * 60,
 				httpOnly: true, // cannot access cookie in frontend
@@ -79,7 +81,7 @@ const main = async () => {
 
 	app.use(
 		cors({
-			origin: config.orgindev,
+			origin: config.orgin,
 			credentials: true,
 		})
 	);
