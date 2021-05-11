@@ -1,4 +1,5 @@
 import { max } from "class-validator";
+import { info } from "console";
 import {
 	Arg,
 	Ctx,
@@ -33,20 +34,37 @@ export class PostResolver {
 		// await sleep(600);
 		const realLimit = Math.min(15, limit); // fetch one more than user asked
 		const realLimitPlueOne = realLimit + 1;
-		const qb = getConnection()
-			.getRepository(Post)
-			.createQueryBuilder("p")
-			.orderBy('"createdAt"', "DESC") // double quotes to keep uppercase
-			.take(realLimitPlueOne);
 
+		const replacement: any[] = [realLimitPlueOne]; // string format
 		if (cursor) {
-			qb.where('"createdAt" < :cursor', {
-				cursor: new Date(parseInt(cursor)),
-			});
+			replacement.push(new Date(parseInt(cursor)));
 		}
 
-		// awsome pagenation
-		const posts = await qb.getMany();
+		// build query because querybuilder broke
+
+		// currently u.username is returned on the same level as post, and graphql doesn't expect that,
+		// so we need to format with psql build in json_build_object()
+		const posts = await getConnection().query(
+			`
+			SELECT p.*, 
+			json_build_object(
+				'id', u.id,
+				'email', u.email,
+				'username', u.username,
+				'nickname', u.nickname,
+				'is_op', u.is_op,
+				'createdAt', u."createdAt",
+				'updatedAt', u."updatedAt"
+				) creator
+			FROM post p
+			INNER JOIN op_users u on u.id = p."creatorId"
+			${cursor ? `WHERE p."createdAt" < $2` : ""} 
+			ORDER BY p."createdAt" DESC
+			limit $1
+		`,
+			replacement
+		);
+
 		return {
 			post: posts.slice(0, realLimit),
 			hasMore: posts.length === realLimitPlueOne,

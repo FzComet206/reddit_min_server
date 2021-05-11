@@ -81,7 +81,7 @@ const main = async () => {
 
 	app.use(
 		cors({
-			origin: config.orgin,
+			origin: config.orgindev,
 			credentials: true,
 		})
 	);
