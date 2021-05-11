@@ -1,11 +1,18 @@
-import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import {
+	Arg,
+	Ctx,
+	FieldResolver,
+	Mutation,
+	Query,
+	Resolver,
+	Root,
+} from "type-graphql";
 // import { Users } from "../entity/User";
 import { OpUsers } from "../entity/OpUsers";
 import argon2 from "argon2";
 import {
 	UserResponse,
 	UsernamePasswordEmailInput,
-	LogoutResponse,
 } from "./UserInputAndResponse";
 import { MyContext } from "../types";
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
@@ -18,8 +25,19 @@ import { sleep } from "../utils/sleep";
 import config from "../config";
 import { getConnection, getRepository } from "typeorm";
 
-@Resolver()
+@Resolver(OpUsers)
 export class UserResolver {
+	// controls premissions when query specific fields
+	@FieldResolver(() => String)
+	email(@Root() user: OpUsers, @Ctx() { req }: MyContext) {
+		// this is current user so it's ok to show their own info
+		if (req.session.userId === user.id) {
+			return user.email;
+		}
+		// not permitted
+		return "no permission";
+	}
+
 	// query self to check if logged in
 	@Query(() => OpUsers, { nullable: true })
 	me(@Ctx() { req }: MyContext) {
@@ -166,22 +184,24 @@ export class UserResolver {
 					nickname: options.username,
 				})
 				.execute();
-			
+
 			const selectUser = await OpUsers.findOne({
-				username: options.username.toLowerCase()
+				username: options.username.toLowerCase(),
 			});
 
 			req.session!.userId = selectUser.id;
 			req.session!.userName = selectUser.username.toLowerCase();
 			req.session!.userNickname = selectUser.nickname;
 
-			console.log(`${selectUser.username} just registered and is logged in!`);
+			console.log(
+				`${selectUser.username} just registered and is logged in!`
+			);
 
 			return {
-				user: selectUser
+				user: selectUser,
 			};
 		} catch (err) {
-			console.log(err)
+			console.log(err);
 			return {
 				errors: [
 					{

@@ -3,6 +3,7 @@ import { info } from "console";
 import {
 	Arg,
 	Ctx,
+	Field,
 	FieldResolver,
 	Int,
 	Mutation,
@@ -21,6 +22,7 @@ import { PaginatedPost, PostInput, PostResponse } from "./UserInputAndResponse";
 
 @Resolver(Post)
 export class PostResolver {
+
 	@FieldResolver(() => String) // graphql thing
 	textSnippet(@Root() root: Post) {
 		return root.text.slice(0, 400);
@@ -41,7 +43,6 @@ export class PostResolver {
 		}
 
 		// build query because querybuilder broke
-
 		// currently u.username is returned on the same level as post, and graphql doesn't expect that,
 		// so we need to format with psql build in json_build_object()
 		const posts = await getConnection().query(
